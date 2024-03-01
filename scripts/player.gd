@@ -118,6 +118,7 @@ func interact():
 	if interact_ray.is_colliding():
 		interact_ray.get_collider()._player_interact(player_inventory)
 
+
 func get_drop_position() -> Vector3:
 	var drop_direction = -camera.global_transform.basis.z
 	return camera.global_position + drop_direction

@@ -37,12 +37,15 @@ func _physics_process(delta):
 		if state_machine.is_current_state("Sprint"):
 			%Reticle.show()
 			Assault_Rifle_Scope()
+			
+			
+	if weapon_current:
+		if weapon_current.item_type == weapon_current.ItemType.weapon:
+			if(Input.is_action_just_pressed("fire")):
+				apply_recoil()
 	
-	if(Input.is_action_just_pressed("fire")):
-		if weapon_current:
-			if weapon_current.item_type == weapon_current.ItemType.weapon:
+			if current_time < 1:
 				shoot(delta)
-				print("FIRE")
 
 func _unhandled_input(_event):
 	if weapon_current:
@@ -51,7 +54,6 @@ func _unhandled_input(_event):
 				reload()
 			if(Input.is_action_just_pressed("fire")):
 				if !Scoped:
-				
 					#--- переделать (пример)
 					weapon_current.ammo_current -= 1
 					Update_Ammo.emit([weapon_current.ammo_current, weapon_current.ammo_reserve])
@@ -70,10 +72,10 @@ func initialize_weapon(weapon : Node3D): # получает данные о сл
 		Weapon_Changed.emit(weapon_current.weapon_name)
 		Update_Ammo.emit([weapon_current.ammo_current, weapon_current.ammo_reserve])
 		
-		def_pos = weapon_current_object.position # Обнуление позиции оружия
-		def_rot = weapon_current_object.rotation
-		target_rot.y = weapon_current_object.rotation.y
+		update_pos()
 		current_time = 1
+		
+		
 
 func exit(weapon : InSlotData):
 	if weapon != null:
@@ -84,26 +86,29 @@ func exit(weapon : InSlotData):
 			weapon_current = null
 
 func shoot(delta):
-	apply_recoil()
-	if current_time < 1:
-		current_time += delta * weapon_current.recoil_speed
-		weapon_current_object.position.z = lerp(weapon_current_object.position.z, def_pos.z + target_pos.z, weapon_current.lerp_speed * delta)
-		weapon_current_object.rotation.z = lerp(weapon_current_object.rotation.z, def_rot.z + target_rot.z, weapon_current.lerp_speed * delta)
-		weapon_current_object.rotation.x = lerp(weapon_current_object.rotation.x, def_rot.x + target_rot.x, weapon_current.lerp_speed * delta)
+	current_time += delta * weapon_current.recoil_speed
+	print("Test1 current_time",current_time)
+	weapon_current_object.position.z = lerp(weapon_current_object.position.z, def_pos.z + target_pos.z, weapon_current.lerp_speed * delta)
+	weapon_current_object.rotation.z = lerp(weapon_current_object.rotation.z, def_rot.z + target_rot.z, weapon_current.lerp_speed * delta)
+	weapon_current_object.rotation.x = lerp(weapon_current_object.rotation.x, def_rot.x + target_rot.x, weapon_current.lerp_speed * delta)
 		
-		target_rot.z = weapon_current.recoil_rotation_z.sample(current_time) * weapon_current.recoil_amplitude.y
-		target_rot.x = weapon_current.recoil_rotation_x.sample(current_time) * -weapon_current.recoil_amplitude.x
-		target_pos.z = weapon_current.recoil_position_z.sample(current_time) * weapon_current.recoil_amplitude.z
-		
-	
+	target_rot.z = weapon_current.recoil_rotation_z.sample(current_time) * weapon_current.recoil_amplitude.y
+	target_rot.x = weapon_current.recoil_rotation_x.sample(current_time) * -weapon_current.recoil_amplitude.x
+	target_pos.z = weapon_current.recoil_position_z.sample(current_time) * weapon_current.recoil_amplitude.z
 		
 
 func apply_recoil():
+	print("Test1 recoil")
 	weapon_current.recoil_amplitude.y *= -1 if randf() > 0.5 else 1
 	target_rot.z = weapon_current.recoil_rotation_z.sample(0) * weapon_current.recoil_amplitude.y
 	target_rot.x = weapon_current.recoil_rotation_x.sample(0) * -weapon_current.recoil_amplitude.x
 	target_pos.z = weapon_current.recoil_position_z.sample(0) * weapon_current.recoil_amplitude.z
 	current_time = 0
+
+func update_pos():
+	def_pos = weapon_current_object.position 
+	def_rot = weapon_current_object.rotation
+	target_rot.y = weapon_current_object.rotation.y
 
 func reload():
 	animator.play(weapon_current.anim_reload)
